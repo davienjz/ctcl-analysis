@@ -13,6 +13,6 @@ panel5 <- read.csv("panel5.csv")
 
 df <- rbind(panel1, panel2, panel3, panel4, panel5)
 
-write.csv(df, file = "workingfile.csv")
+write.csv(df, file = "workingfile.csv") #the file
 
 
