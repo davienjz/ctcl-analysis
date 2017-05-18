@@ -1,3 +1,6 @@
+#Libraries
+
+library(RColor
 #Import data
 
 panel1 <- read.csv("panel1.csv")
