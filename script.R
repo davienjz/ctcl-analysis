@@ -57,17 +57,34 @@ pos2 <- regexpr(
 								perl = TRUE)
 
 # find patient number
-patientnumber <- substr(samplestring,pos2,pos2+attributes(pos2)[[1]]-1)
+galliospatientnumber <- substr(samplestring,pos2,pos2+attributes(pos2)[[1]]-1)
 
 # find sample number
-samplenumber <- gsub(" ","",samplestring, fixed=TRUE)
+galliosfilenumber <- gsub(" ","",samplestring, fixed=TRUE)
 
 # check results
-levels(as.factor(patientnumber))
-levels(as.factor(samplenumber))
+levels(as.factor(galliospatientnumber))
+levels(as.factor(galliosfilenumber))
 
-df <- cbind(patientnumber,samplenumber,df)
+df2 <- cbind(galliospatientnumber,galliosfilenumber,df)
 
-df[df$patientnumber=="CTCL013DB",]
+head(df2[df2$galliospatientnumber=="CTCL013DB",])
 
+### import metadata
 
+df_facs <- read.csv("sample_facs_data.csv")
+df_samples <- read.csv("samples.csv")
+
+### merge into facs data and samples sheet
+df3 <- merge(df2,df_facs,by="galliosfilenumber")
+df4 <- merge(df3,df_samples,by="samplenumber")
+
+#drop unnecessary columns
+
+drop <- c("notes.x","notes.y","location.1","run","run.","clonotypic","vb","pe_fitc_ab",
+					"galliosfilenumber","galliospatientnumber","Data.Set")
+df5 <- df4[,!(names(df4) %in% drop)]
+
+write.csv(df5, file = "workingfile5.csv")
+
+### 
