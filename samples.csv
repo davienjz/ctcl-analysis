@@ -323,7 +323,7 @@ CTCL038HM,CTCL038HM02B,blood_lihep,,30/01/17,"3,750,000",,,box3:pos74,,0,,,
 CTCL038HM,CTCL038HM02C,blood_lihep,,30/01/17,"3,750,000",,,box3:pos72,,0,,,
 CTCL038HM,CTCL038HM02D,blood_lihep,,30/01/17,"3,750,000",,,box3:pos71,,0,,,
 CTCL038HM,CTCL038HM03,blood_serum,,30/01/17,,,,box3:pos80,,0,,,
-CTCL039EB,CTCL039EB01,plaque,,30/01/17,"500,000",,,,31/01/17,1,1,vb7.1,vial_a
+CTCL039EB,CTCL039EB01,plaque,,30/01/17,"500,000",fresh,,,31/01/17,1,1,vb7.1,vial_a
 CTCL039EB,CTCL039EB02Z,blood_lihep,,30/01/17,"4,000,000",,,,31/01/17,1,,,
 CTCL039EB,CTCL039EB02A,blood_lihep,,30/01/17,"3,600,000",,,box3:pos27,,0,,,
 CTCL039EB,CTCL039EB02B,blood_lihep,,30/01/17,"3,600,000",,,box3:pos28,,0,,,
