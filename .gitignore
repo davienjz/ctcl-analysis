@@ -1,4 +1,5 @@
 analysis.txt
 *.png
 *.log
+.Rproj.user
 workingfile*

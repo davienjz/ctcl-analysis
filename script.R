@@ -57,20 +57,18 @@ pos2 <- regexpr(
 								perl = TRUE)
 
 # find patient number
-galliospatientnumber <- substr(samplestring,pos2,pos2+attributes(pos2)[[1]]-1)
+patientnumber <- substr(samplestring,pos2,pos2+attributes(pos2)[[1]]-1)
 
 # find sample number
-galliosfilenumber <- gsub(" ","",samplestring, fixed=TRUE)
+samplenumber <- gsub(" ","",samplestring, fixed=TRUE)
 
 # check results
-levels(as.factor(galliospatientnumber))
-levels(as.factor(galliosfilenumber))
+levels(as.factor(patientnumber))
+levels(as.factor(samplenumber))
 
-df2 <- cbind(galliospatientnumber,galliosfilenumber,df)
+df <- cbind(patientnumber,samplenumber,df)
 
-head(df2[df2$galliospatientnumber=="CTCL013DB",])
-
-### import metadata
+df[df$patientnumber=="CTCL013DB",]
 
 df_facs <- read.csv("sample_facs_data.csv")
 df_samples <- read.csv("samples.csv")
@@ -88,5 +86,4 @@ df5 <- df4[,!(names(df4) %in% drop)]
 write.csv(df5, file = "workingfile5.csv")
 
 ### 
-
 
