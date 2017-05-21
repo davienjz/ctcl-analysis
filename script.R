@@ -134,7 +134,7 @@ df6 <- df5
 
 write.csv(df6, file = "workingfile6.csv")
 
-columns <- c("samplenumber","studynumber","run_date","clone","vbeta","vb_cd7","vb_all","cd2","sampletype","location","storage","population","expression","gmean","pcgate")
+columns <- c("samplenumber","studynumber","run_date","clone","vbeta","vb_cd7","vb_all","cd2","sampletype","location","storage","population","expression","gmean","pcgate","Gate","Y.Parameter","Protocol")
 
 columns_select<- names(df6) %in% columns
 
@@ -171,13 +171,74 @@ df7 <- df6[rows1_select & rows2_select, columns_select]
 #drop other factors, by factoring over length of dataframe
 df7[] <- lapply(df7, function(column) if(is.factor(column)) factor(column) else column)
 
-### analyse clonal data that has geometric means
+write.csv(df7, file = "workingfile7.csv")
+
+### analyse clonal data that has geometric means for panels 1-4
 #drop pcgate and take clonal
 df8 <- df7[df7$clone == TRUE & !is.na(df7$gmean),!(names(df7) %in% c("pcgate"))]
 
+#drop gates that are not 'all'
+df8b <- df8[df8$Gate == "All",]
+
+#just take panel3 histogram data
+exclude <- df8b$Y.Parameter != "Count" & df8b$Protocol == "panel3"
+df8b[exclude,]
+df8c <- df8b[!exclude,]
+
+#drop panel5
+df8d <- df8c[!df8c$Protocol == "panel5",]
+df8c[df8c$Protocol == "Panel5",]
+
 #melt dataframe
-df9 <- melt(df8,c("samplenumber","population","expression"),c("gmean"))
+df9 <- melt(df8d,c("samplenumber","population","expression"),c("gmean"))
 
 #cast to 3D array
-df10 <- acast(df9[,-"Gmean"], samplenumber ~ population ~ expression)
+df10 <- acast(df9, samplenumber ~ population ~ expression)
+
+#calculate fold change
+cd4tilfc <- asinh(df10[,"til_cd4",]) - asinh(df10[,"pb_cd4",])
+
+tumourfc <- asinh(df10[,"tumour",]) - asinh(df10[,"pb_cd4",])
+
+cd8tilfc <- asinh(df10[,"til_cd8",]) - asinh(df10[,"pb_cd8",])
+
+df11 <- abind(df10, "cd4tilfc" = cd4tilfc, "tumourfc" = tumourfc, "cd8tilfc" = cd8tilfc, along = 2)
+
+names(dimnames(df11)) <- c("samplenumber","population","expression")
+
+df12 <- melt(df11)
+
+df13 <- df12[df12$population %in% c("tumourfc","cd4tilfc","cd8tilfc"),]
+
+#re-order by populations
+df14 <- acast(df13,samplenumber ~ population + expression)
+df14names <- acast(df13, samplenumber ~ population ~ expression)
+
+#clinical groups
+clinical <- match(rownames(df14), df7$samplenumber)
+
+#colours
+col_breaks <- c(seq(-1,-0.01,length=100),0,seq(0.01,1,length = 100),seq(1.01,2,length=100))
+my_palette <- colorRampPalette(c("#3540FF","black","#D42C2C","#FF3535"))(n = length(col_breaks)-1)
+
+col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clinical]))+5]
+
+col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(df14names)[[2]],each = length(dimnames(df14names)[[3]]))))]
+
+col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]],))]
+
+col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+5]
+
+#heatmap
+heatmap.2(df14,
+					breaks = col_breaks,
+					col = my_palette,
+					trace = "none",
+					Colv = NA,
+					RowSideColors = col1,
+					ColSideColors = col2,
+)
+
+
+
 
