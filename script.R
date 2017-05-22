@@ -109,6 +109,7 @@ df5[] <- lapply(df5, function(column) if(is.factor(column)) factor(column) else 
 df5$population <- as.factor(gsub("\\[|\\]","",df5$Input.Gate))
 df5$expression <- df5$X.Parameter
 df5$gmean <- df5$X.GMean
+df5$gated <- df5$X.Gated
 
 ### find gated data
 ##find t reg gates
@@ -149,7 +150,25 @@ df6 <- df5
 
 write.csv(df6, file = "workingfile6.csv")
 
-columns <- c("samplenumber","studynumber","run_date","clone","vbeta","vb_cd7","vb_all","cd2","sampletype","location","storage","population","expression","gmean","pcgate","Gate","Y.Parameter","Protocol")
+columns <- c("samplenumber",
+             "studynumber",
+             "run_date",
+             "clone",
+             "vbeta",
+             "vb_cd7",
+             "vb_all",
+             "cd2",
+             "sampletype",
+             "location",
+             "storage",
+             "population",
+             "expression",
+             "gmean",
+             "pcgate",
+             "Gate",
+             "Y.Parameter",
+             "Protocol",
+             "gated")
 
 columns_select<- names(df6) %in% columns
 
