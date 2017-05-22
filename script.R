@@ -7,7 +7,6 @@ install.packages("EnvStats")
 install.packages("xtable")
 install.packages("corrgram")
 
-
 #libraries
 library(RColorBrewer)
 library(reshape2)
@@ -85,12 +84,9 @@ df2 <- cbind(galliospatientnumber,galliosfilenumber,df)
 ### merge into facs data and samples sheet
 df3 <- merge(df2,df_facs,by="galliosfilenumber")
 df4 <- merge(df3,df_samples,by="samplenumber")
-df4[df4 == "" | df4 == "N/A"] <- NA
 
 ### tidy dataframe
-
 #convert all empty spaces and N/A to NA AND make numeric
-
 df4[df4 == "" | df4 == "N/A"] <- NA
 
 numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode", "X.Stdev",
