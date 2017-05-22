@@ -1,3 +1,13 @@
+#package installation
+install.packages("RColorBrewer")
+install.packages("reshape2")
+install.packages("abind")
+install.packages("gplots")
+install.packages("EnvStats")
+install.packages("xtable")
+install.packages("corrgram")
+
+
 #libraries
 library(RColorBrewer)
 library(reshape2)
@@ -79,9 +89,13 @@ df4[df4 == "" | df4 == "N/A"] <- NA
 
 ### tidy dataframe
 
-#make numeric
-numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode","X.Stdev","X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode","Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean")
+#convert all empty spaces and N/A to NA AND make numeric
 
+df4[df4 == "" | df4 == "N/A"] <- NA
+
+numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode", "X.Stdev",
+              "X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode",
+              "Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean") 
 numerics_select <- names(df4) %in% numerics
 
 df4[,numerics_select] <- lapply(df4[,numerics_select], function(column) as.numeric(column))
@@ -100,6 +114,7 @@ df5[] <- lapply(df5, function(column) if(is.factor(column)) factor(column) else 
 df5$population <- as.factor(gsub("\\[|\\]","",df5$Input.Gate))
 df5$expression <- df5$X.Parameter
 df5$gmean <- df5$X.GMean
+df5$gated <- df5$X.Gated
 
 ### find gated data
 ##find t reg gates
@@ -120,13 +135,14 @@ df5[select2,c("expression","pcgate")]
 
 ##find panel 5 gates
 panel5expression <- c("ifngamma","il4","il10","il17a")
-select3a <- df5$Protocol == "panel5"
+select3a <- df5$ï..Protocol == "panel5"
 select3b <- df5$X.Parameter %in% panel5expression
 select3c <- df5$Y.Parameter == "Count"
 select3d <- df5$Gate != "All"
 select3 <- select3a & select3b & select3c & select3d
 
 df5[select3,"pcgate"] <- df5[select3,"X.Gated"]
+
 
 #check data
 table(df5$samplenumber,df5$clone)
@@ -139,7 +155,25 @@ df6 <- df5
 
 writeCsv(df6)
 
-columns <- c("samplenumber","studynumber","run_date","clone","vbeta","vb_cd7","vb_all","cd2","sampletype","location","storage","population","expression","gmean","pcgate","Gate","Y.Parameter","Protocol")
+columns <- c("samplenumber",
+             "studynumber",
+             "run_date",
+             "clone",
+             "vbeta",
+             "vb_cd7",
+             "vb_all",
+             "cd2",
+             "sampletype",
+             "location",
+             "storage",
+             "population",
+             "expression",
+             "gmean",
+             "pcgate",
+             "Gate",
+             "Y.Parameter",
+             "Protocol",
+             "gated")
 
 columns_select<- names(df6) %in% columns
 
@@ -165,7 +199,7 @@ rows1 <- c("pd1",
 					 )
 
 #drop panel3 il10 and tfgb1 to prevent confusion with panel5
-rows2_select <- !(df6$Protocol == "panel3" & df6$X.Parameter %in% c("il10","tgfb1"))
+rows2_select <- !(df6$ï..Protocol == "panel3" & df6$X.Parameter %in% c("il10","tgfb1"))
 mean(rows2_select)
 
 rows1_select <- df6$expression %in% rows1 
@@ -177,6 +211,101 @@ df7 <- df6[rows1_select & rows2_select, columns_select]
 df7[] <- lapply(df7, function(column) if(is.factor(column)) factor(column) else column)
 
 writeCsv(df7)
+
+###analysis of panel 5
+#subset panel 5
+dfpan5 <- subset(df7, expression == "ifngamma"|expression == "il4"|expression == "il10"|expression == "il17a")
+dfpan5
+
+write.csv(dfpan5, file = "workingfilepan5.csv")
+
+##drop gates that are not 'all'
+dfpan5a <- dfpan5[!dfpan5$Gate == "All",]
+
+##Calculate iMFI
+#convert gated percentage to decimal
+dfpan5a$gated <- dfpan5a$gated/100
+
+#calculate iMFI
+
+dfpan5a$iMFI <- dfpan5a$gmean * dfpan5a$gated
+write.csv(dfpan5a, file = "workingfileiMFI.csv")
+
+#subset clonal
+dfpan5b <- subset(dfpan5a, clone == TRUE & !is.na(dfpan5a$iMFI))
+write.csv(dfpan5b, file = "clonalpanel5.csv")
+
+
+#melt dataframe
+dfpan5c <- melt(dfpan5b,c("samplenumber","population","expression"),c("iMFI"))
+dfpan5c
+
+###take tils and tumour
+tiltum <- subset(dfpan5c, population == "tumour" | population =="til_cd8" | population == "til_cd4")
+tiltum
+
+#cast to 3D array
+dfpan5d <- acast(tiltum, samplenumber ~ population + expression)
+dfpan5d
+
+##organise
+dfpan5d[, c("til_cd4_ifngamma",
+        "til_cd4_il4",
+        "til_cd4_il17a",
+        "til_cd4_il10",
+        "tumour_ifngamma",
+        "tumour_il4",
+        "tumour_il17a",
+        "tumour_il10",
+        "til_cd8_ifngamma",
+        "til_cd8_il4",
+        "til_cd8_il17a",
+        "til_cd8_il10")]
+
+#names
+justfornames <- acast(dfpan5c, samplenumber ~ population ~ expression)
+
+naming <- justfornames[, , c("ifngamma",
+                               "il4",
+                               "il17a",
+                               "il10")]
+
+##colours
+#set colours
+col_breaks <- c(seq(0.01,1,length = 100),
+                seq(1.01,4,length=100),
+                seq(4.01,6,length=100),
+                seq(6.01, 8, length =100)) #sets where different colours start
+palette <- colorRampPalette(c("#3540FF",
+                              "blue",
+                              "black",
+                              "#D42C2C",
+                              "#FF3535"
+))
+(n = length(col_breaks)-1)
+
+col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(naming)[[2]])))]
+
+
+
+heatmap.2(dfpan5d, 
+          trace = "none",
+          Colv = NA,
+          dendrogram = "row",
+          key = TRUE,
+          symkey = FALSE,
+          key.title = NA,
+          margins = c(8.7,7),
+          col = palette,
+          breaks = col_breaks,
+          colsep = c(4,8),
+          labCol = rep(dimnames(naming)[[3]], 
+                       length(dimnames(naming)[[3]])))
+
+text(0.3266486, 0.9, labels = "CD4 TIL")
+text(0.5574301, 0.9, labels = "TUMOUR" )
+text(0.7882116, 0.9, labels = "CD8 TIL")
+
 
 ### analyse clonal data that has geometric means for panels 1-4
 #drop pcgate and take clonal
@@ -232,7 +361,7 @@ col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clini
 
 col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(df14names)[[2]],each = length(dimnames(df14names)[[3]]))))]
 
-col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]],))]
+col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]]))]
 
 col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+5]
 
@@ -243,7 +372,7 @@ heatmap.2(df14,
 					trace = "none",
 					Colv = NA,
 					RowSideColors = col1,
-					ColSideColors = col2,
+					ColSideColors = col2
 )
 
 ### striplots

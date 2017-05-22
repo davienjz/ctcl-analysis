@@ -1,4 +1,4 @@
-"","Protocol","Sheet","Data.Set","Input.Gate","X.Parameter","Y.Parameter","Gate","Number","X.Total","X.Gated","X.Med","X.AMean","X.Mode","X.Stdev","X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode","Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean","Logic"
+"","ï..Protocol","Sheet","Data.Set","Input.Gate","X.Parameter","Y.Parameter","Gate","Number","X.Total","X.Gated","X.Med","X.AMean","X.Mode","X.Stdev","X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode","Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean","Logic"
 "1","panel1","populations","2016_03_24 CTCL004PJ02_panel1 00015952 065","","","","All",322325,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Ungated"
 "2","panel1","populations","2016_03_24 CTCL004PJ02_panel1 00015952 065","","","","cd4blood",3606,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"cd4 AND viable_cd3 AND lymphocytes AND singlets AND blood"
 "3","panel1","populations","2016_03_24 CTCL004PJ02_panel1 00015952 065","","","","cd4skin",179,NA,NA,NA,NA,"",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"cd4 AND viable_cd3 AND lymphocytes AND singlets AND skin"
