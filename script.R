@@ -1,11 +1,11 @@
 #package installation
-install.packages("RColorBrewer")
-install.packages("reshape2")
-install.packages("abind")
-install.packages("gplots")
-install.packages("EnvStats")
-install.packages("xtable")
-install.packages("corrgram")
+#install.packages("RColorBrewer")
+#install.packages("reshape2")
+#install.packages("abind")
+#install.packages("gplots")
+#install.packages("EnvStats")
+#install.packages("xtable")
+#install.packages("corrgram")
 
 #libraries
 library(RColorBrewer)
@@ -195,7 +195,7 @@ rows1 <- c("pd1",
 					 )
 
 #drop panel3 il10 and tfgb1 to prevent confusion with panel5
-rows2_select <- !(df6$ï..Protocol == "panel3" & df6$X.Parameter %in% c("il10","tgfb1"))
+rows2_select <- !(df6$Protocol == "panel3" & df6$X.Parameter %in% c("il10","tgfb1"))
 mean(rows2_select)
 
 rows1_select <- df6$expression %in% rows1 
@@ -213,7 +213,7 @@ writeCsv(df7)
 dfpan5 <- subset(df7, expression == "ifngamma"|expression == "il4"|expression == "il10"|expression == "il17a")
 dfpan5
 
-write.csv(dfpan5, file = "workingfilepan5.csv")
+writeCsv(dfpan5)
 
 ##drop gates that are not 'all'
 dfpan5a <- dfpan5[!dfpan5$Gate == "All",]
@@ -225,12 +225,9 @@ dfpan5a$gated <- dfpan5a$gated/100
 #calculate iMFI
 
 dfpan5a$iMFI <- dfpan5a$gmean * dfpan5a$gated
-write.csv(dfpan5a, file = "workingfileiMFI.csv")
 
 #subset clonal
 dfpan5b <- subset(dfpan5a, clone == TRUE & !is.na(dfpan5a$iMFI))
-write.csv(dfpan5b, file = "clonalpanel5.csv")
-
 
 #melt dataframe
 dfpan5c <- melt(dfpan5b,c("samplenumber","population","expression"),c("iMFI"))

@@ -3,4 +3,6 @@ analysis.txt
 *.log
 .Rproj.user
 workingfile*
-/output*
+figures/*.png
+output/*.csv
+
