@@ -269,13 +269,14 @@ col_breaks <- c(seq(0.01,2,length = 100),
                 seq(2.01,4,length=100),
                 seq(4.01,6,length=100),
                 seq(6.01, 8, length =100)) #sets where different colours start
+
 palette <- colorRampPalette(c("black","darkred", 
                               "#D42C2C",
                               "#FF3535"
-                              ))
-(n = length(col_breaks)-1)
+                              ))(n = length(col_breaks)-1)
 
 col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(naming)[[2]])))]
+palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(naming)[[2]])))]
 
 
 
@@ -366,10 +367,11 @@ heatmap.2(df14,
 					ColSideColors = col2
 )
 
-### striplots
+### strip plots
 
 df8c$population
 
 stripPlot(df8c,c("tumour","pb_cd4"))
 stripPlot(df8c,c("til_cd4","pb_cd4"))
 stripPlot(df8c,c("til_cd8","pb_cd8"))
+

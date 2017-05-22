@@ -24,7 +24,7 @@ stripPlot <- function(df_a, compare){
 				 c(compare[1],compare[2]),
 				 fill = c("red","blue")
 				 )
-	df_d <- acast(df_c, samplenumber ~ population ~ expression)
+	df_d <- acast(df_c, samplenumber ~ population ~ expression, value.var = "gmean")
 	
 	stats <- apply(df_d, 3, function(x){
 							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
