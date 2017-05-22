@@ -243,7 +243,19 @@ tiltum
 dfpan5d <- acast(tiltum, samplenumber ~ population + expression)
 dfpan5d
 
-
+##organise
+dfpan5d[, c("til_cd4_ifngamma",
+        "til_cd4_il4",
+        "til_cd4_il17a",
+        "til_cd4_il10",
+        "tumour_ifngamma",
+        "tumour_il4",
+        "tumour_il17a",
+        "tumour_il10",
+        "til_cd8_ifngamma",
+        "til_cd8_il4",
+        "til_cd8_il17a",
+        "til_cd8_il10")]
 
 #names
 justfornames <- acast(dfpan5c, samplenumber ~ population ~ expression)
@@ -253,6 +265,24 @@ naming <- justfornames[, , c("ifngamma",
                                "il17a",
                                "il10")]
 
+##colours
+#set colours
+col_breaks <- c(seq(0.01,1,length = 100),
+                seq(1.01,4,length=100),
+                seq(4.01,6,length=100),
+                seq(6.01, 8, length =100)) #sets where different colours start
+palette <- colorRampPalette(c("darkgreen",
+                              "gold",
+                              "black",
+                              "#D42C2C",
+                              "#FF3535"
+))
+(n = length(col_breaks)-1)
+
+col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(naming)[[2]])))]
+
+
+
 heatmap.2(dfpan5d, 
           trace = "none",
           Colv = NA,
@@ -261,7 +291,15 @@ heatmap.2(dfpan5d,
           symkey = FALSE,
           key.title = NA,
           margins = c(8.7,7),
-          colsep = c(4,8, 12, 16, 20, 24, 28))
+          col = palette,
+          breaks = col_breaks,
+          colsep = c(4,8),
+          labCol = rep(dimnames(naming)[[3]], 
+                       length(dimnames(naming)[[3]])))
+
+text(0.3266486, 0.9, labels = "CD4 TIL")
+text(0.5574301, 0.9, labels = "TUMOUR" )
+text(0.7882116, 0.9, labels = "CD8 TIL")
 
 
 ### analyse clonal data that has geometric means for panels 1-4
