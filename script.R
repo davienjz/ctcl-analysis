@@ -7,17 +7,23 @@ library(EnvStats)
 library(xtable)
 library(corrgram)
 
+### import functions
+source("functions.R")
+
 ### import data
-panel1 <- read.csv("panel1.csv")
-panel2 <- read.csv("panel2.csv")
-panel3 <- read.csv("panel3.csv")
-panel4 <- read.csv("panel4.csv")
-panel5 <- read.csv("panel5.csv")
+panel1 <- read.csv("data/panel1.csv")
+panel2 <- read.csv("data/panel2.csv")
+panel3 <- read.csv("data/panel3.csv")
+panel4 <- read.csv("data/panel4.csv")
+panel5 <- read.csv("data/panel5.csv")
+
+df_facs <- read.csv("data/sample_facs_data.csv")
+df_samples <- read.csv("data/samples.csv")
 
 ### merge data
 df <- rbind(panel1, panel2, panel3, panel4, panel5)
 
-write.csv(df, file = "workingfile.csv")
+writeCsv(df)
 
 ### filename generation
 count <<- 0
@@ -65,8 +71,6 @@ levels(as.factor(galliosfilenumber))
 ### add patient number and file number in
 df2 <- cbind(galliospatientnumber,galliosfilenumber,df)
 
-df_facs <- read.csv("sample_facs_data.csv")
-df_samples <- read.csv("samples.csv")
 
 ### merge into facs data and samples sheet
 df3 <- merge(df2,df_facs,by="galliosfilenumber")
@@ -87,7 +91,7 @@ drop <- c("notes.x","notes.y","location.1","run","run.","clonotypic","vb","pe_fi
 					"galliosfilenumber","galliospatientnumber","Data.Set")
 df5 <- df4[,!(names(df4) %in% drop)]
 
-write.csv(df5, file = "workingfile5.csv")
+writeCsv(df5)
 
 #drop other factors, by factoring over length of dataframe
 df5[] <- lapply(df5, function(column) if(is.factor(column)) factor(column) else column)
@@ -133,7 +137,7 @@ table(df5$samplenumber,df5$location)
 
 df6 <- df5
 
-write.csv(df6, file = "workingfile6.csv")
+writeCsv(df6)
 
 columns <- c("samplenumber","studynumber","run_date","clone","vbeta","vb_cd7","vb_all","cd2","sampletype","location","storage","population","expression","gmean","pcgate","Gate","Y.Parameter","Protocol")
 
@@ -172,7 +176,7 @@ df7 <- df6[rows1_select & rows2_select, columns_select]
 #drop other factors, by factoring over length of dataframe
 df7[] <- lapply(df7, function(column) if(is.factor(column)) factor(column) else column)
 
-write.csv(df7, file = "workingfile7.csv")
+writeCsv(df7)
 
 ### analyse clonal data that has geometric means for panels 1-4
 #drop pcgate and take clonal
@@ -246,103 +250,6 @@ heatmap.2(df14,
 
 df8c$population
 
-cd4tilsp <- c("til_cd4","pb_cd4")
-
-dg9 <- df8c[df8c$population %in% cd4tilsp,]
-
-dg9$gmean <- asinh(dg9$gmean)
-
-names <- levels(factor(dg9$expression))
-levels(factor(dg9$expression))
-
-names2 <- rep(names ,each = 2)
-
-length(names2)
-
-stripChart(gmean ~ population + expression,
-					 dg9,
-					 col = c("red","blue"),
-					 vertical = T,
-					 method = "jitter",
-					 p.value = TRUE,
-					 cex = 0.63,
-					 group.names = names2
-					 )
-
-dg10 <- acast(dg9, samplenumber ~ population ~ expression)
-
-cd4 <- apply(dg10, 3, function(x){
-							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
-							 pvalue <- t.test(x[,2],x[,1],paired = TRUE)[[3]]
-							 return(c(statistic,pvalue))
-					 })
-
-#cd8s
-
-cd8tilsp <- c("til_cd8","pb_cd8")
-
-dg9 <- df8c[df8c$population %in% cd8tilsp,]
-
-dg9$gmean <- asinh(dg9$gmean)
-
-names <- levels(factor(dg9$expression))
-levels(factor(dg9$expression))
-
-names2 <- rep(names ,each = 2)
-
-length(names2)
-
-stripChart(gmean ~ population + expression,
-					 dg9,
-					 col = c("red","blue"),
-					 vertical = T,
-					 method = "jitter",
-					 p.value = TRUE,
-					 cex = 0.63,
-					 group.names = names2
-					 )
-
-dg10 <- acast(dg9, samplenumber ~ population ~ expression)
-
-cd8 <- apply(dg10, 3, function(x){
-							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
-							 pvalue <- t.test(x[,2],x[,1],paired = TRUE)[[3]]
-							 return(c(statistic,pvalue))
-					 })
-
-cd8
-
-#tumour
-
-tumoursp <- c("tumour","pb_cd4")
-
-dg9 <- df8c[df8c$population %in% tumoursp,]
-
-dg9$gmean <- asinh(dg9$gmean)
-
-names <- levels(factor(dg9$expression))
-levels(factor(dg9$expression))
-
-names2 <- rep(names ,each = 2)
-
-length(names2)
-
-stripChart(gmean ~ population + expression,
-					 dg9,
-					 col = c("blue","red"),
-					 vertical = T,
-					 method = "jitter",
-					 p.value = TRUE,
-					 cex = 0.63,
-					 group.names = names2
-					 )
-
-dg10 <- acast(dg9, samplenumber ~ population ~ expression)
-
-tumour <- apply(dg10, 3, function(x){
-							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
-							 pvalue <- t.test(x[,2],x[,1],paired = TRUE)[[3]]
-							 return(c(statistic,pvalue))
-					 })
-
-tumour
+stripPlot(df8c,c("tumour","pb_cd4"))
+stripPlot(df8c,c("til_cd4","pb_cd4"))
+stripPlot(df8c,c("til_cd8","pb_cd8"))

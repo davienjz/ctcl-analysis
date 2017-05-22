@@ -3,3 +3,4 @@ analysis.txt
 *.log
 .Rproj.user
 workingfile*
+/output*
