@@ -271,8 +271,8 @@ col_breaks <- c(seq(0.01,1,length = 100),
                 seq(1.01,4,length=100),
                 seq(4.01,6,length=100),
                 seq(6.01, 8, length =100)) #sets where different colours start
-palette <- colorRampPalette(c("darkgreen",
-                              "gold",
+palette <- colorRampPalette(c("#3540FF",
+                              "blue",
                               "black",
                               "#D42C2C",
                               "#FF3535"
@@ -307,7 +307,7 @@ text(0.7882116, 0.9, labels = "CD8 TIL")
 df8 <- df7[df7$clone == TRUE & !is.na(df7$gmean),!(names(df7) %in% c("pcgate"))]
 
 #drop gates that are not 'all'
-df8b <- df8[!df8$Gate == "All",]
+df8b <- df8[df8$Gate == "All",]
 
 #just take panel3 histogram data
 exclude <- df8b$Y.Parameter != "Count" & df8b$Protocol == "panel3"
