@@ -268,16 +268,14 @@ naming <- justfornames[, , c("ifngamma",
 
 ##colours
 #set colours
-col_breaks <- c(seq(0.01,1,length = 100),
-                seq(1.01,4,length=100),
+col_breaks <- c(seq(0.01,2,length = 100),
+                seq(2.01,4,length=100),
                 seq(4.01,6,length=100),
                 seq(6.01, 8, length =100)) #sets where different colours start
-palette <- colorRampPalette(c("#3540FF",
-                              "blue",
-                              "black",
+palette <- colorRampPalette(c("black","darkred", 
                               "#D42C2C",
                               "#FF3535"
-))
+                              ))
 (n = length(col_breaks)-1)
 
 col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(naming)[[2]])))]
@@ -299,8 +297,8 @@ heatmap.2(dfpan5d,
                        length(dimnames(naming)[[3]])))
 
 text(0.3266486, 0.9, labels = "CD4 TIL")
-text(0.5574301, 0.9, labels = "TUMOUR" )
-text(0.7882116, 0.9, labels = "CD8 TIL")
+text(0.5275845, 0.9, labels = "TUMOUR" )
+text(0.7384352, 0.9, labels = "CD8 TIL")
 
 
 ### analyse clonal data that has geometric means for panels 1-4
