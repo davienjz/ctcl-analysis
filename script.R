@@ -220,11 +220,39 @@ dfpan5a <- dfpan5[!dfpan5$Gate == "All",]
 ##Calculate iMFI
 #convert gated percentage to decimal
 dfpan5a$gated <- dfpan5a$gated/100
-dfpan5a
+
 #calculate iMFI
+
 dfpan5a$iMFI <- dfpan5a$gmean * dfpan5a$gated
+write.csv(dfpan5a, file = "workingfileiMFI.csv")
 
+#subset clonal
+dfpan5b <- subset(dfpan5a, clone == TRUE & !is.na(dfpan5a$iMFI))
+write.csv(dfpan5b, file = "clonalpanel5.csv")
 
+#melt dataframe
+dfpan5c <- melt(dfpan5b,c("samplenumber","population","expression"),c("iMFI"))
+
+#cast to 3D array
+dfpan5d <- acast(dfpan5c, samplenumber ~ population + expression)
+
+#names
+justfornames <- acast(dfpan5c, samplenumber ~ population ~ expression)
+
+naming <- justfornames[, , c("ifngamma",
+                               "il4",
+                               "il17a",
+                               "il10")]
+
+heatmap.2(dfpan5d, 
+          trace = "none",
+          Colv = NA,
+          dendrogram = "row",
+          key = TRUE,
+          symkey = FALSE,
+          key.title = NA,
+          margins = c(8.7,7),
+          colsep = c(4,8, 12, 16, 20, 24, 28))
 
 
 ### analyse clonal data that has geometric means for panels 1-4
