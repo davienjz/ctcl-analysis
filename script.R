@@ -71,6 +71,7 @@ df_samples <- read.csv("samples.csv")
 ### merge into facs data and samples sheet
 df3 <- merge(df2,df_facs,by="galliosfilenumber")
 df4 <- merge(df3,df_samples,by="samplenumber")
+df4[df4 == "" | df4 == "N/A"] <- NA
 
 ### tidy dataframe
 
@@ -177,13 +178,15 @@ write.csv(df7, file = "workingfile7.csv")
 #drop pcgate and take clonal
 df8 <- df7[df7$clone == TRUE & !is.na(df7$gmean),!(names(df7) %in% c("pcgate"))]
 
-#drop gates that are not 'all'
+#take gates that are 'All' (crude gmean analysis)
 df8b <- df8[df8$Gate == "All",]
 
 #just take panel3 histogram data
 exclude <- df8b$Y.Parameter != "Count" & df8b$Protocol == "panel3"
 df8b[exclude,]
 df8c <- df8b[!exclude,]
+
+# -> fork df8c for striplots
 
 #drop panel5
 df8d <- df8c[!df8c$Protocol == "panel5",]
@@ -239,6 +242,107 @@ heatmap.2(df14,
 					ColSideColors = col2,
 )
 
+### striplots
 
+df8c$population
 
+cd4tilsp <- c("til_cd4","pb_cd4")
 
+dg9 <- df8c[df8c$population %in% cd4tilsp,]
+
+dg9$gmean <- asinh(dg9$gmean)
+
+names <- levels(factor(dg9$expression))
+levels(factor(dg9$expression))
+
+names2 <- rep(names ,each = 2)
+
+length(names2)
+
+stripChart(gmean ~ population + expression,
+					 dg9,
+					 col = c("red","blue"),
+					 vertical = T,
+					 method = "jitter",
+					 p.value = TRUE,
+					 cex = 0.63,
+					 group.names = names2
+					 )
+
+dg10 <- acast(dg9, samplenumber ~ population ~ expression)
+
+cd4 <- apply(dg10, 3, function(x){
+							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
+							 pvalue <- t.test(x[,2],x[,1],paired = TRUE)[[3]]
+							 return(c(statistic,pvalue))
+					 })
+
+#cd8s
+
+cd8tilsp <- c("til_cd8","pb_cd8")
+
+dg9 <- df8c[df8c$population %in% cd8tilsp,]
+
+dg9$gmean <- asinh(dg9$gmean)
+
+names <- levels(factor(dg9$expression))
+levels(factor(dg9$expression))
+
+names2 <- rep(names ,each = 2)
+
+length(names2)
+
+stripChart(gmean ~ population + expression,
+					 dg9,
+					 col = c("red","blue"),
+					 vertical = T,
+					 method = "jitter",
+					 p.value = TRUE,
+					 cex = 0.63,
+					 group.names = names2
+					 )
+
+dg10 <- acast(dg9, samplenumber ~ population ~ expression)
+
+cd8 <- apply(dg10, 3, function(x){
+							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
+							 pvalue <- t.test(x[,2],x[,1],paired = TRUE)[[3]]
+							 return(c(statistic,pvalue))
+					 })
+
+cd8
+
+#tumour
+
+tumoursp <- c("tumour","pb_cd4")
+
+dg9 <- df8c[df8c$population %in% tumoursp,]
+
+dg9$gmean <- asinh(dg9$gmean)
+
+names <- levels(factor(dg9$expression))
+levels(factor(dg9$expression))
+
+names2 <- rep(names ,each = 2)
+
+length(names2)
+
+stripChart(gmean ~ population + expression,
+					 dg9,
+					 col = c("blue","red"),
+					 vertical = T,
+					 method = "jitter",
+					 p.value = TRUE,
+					 cex = 0.63,
+					 group.names = names2
+					 )
+
+dg10 <- acast(dg9, samplenumber ~ population ~ expression)
+
+tumour <- apply(dg10, 3, function(x){
+							 statistic <- t.test(x[,2],x[,1],paired = TRUE)[[5]]
+							 pvalue <- t.test(x[,2],x[,1],paired = TRUE)[[3]]
+							 return(c(statistic,pvalue))
+					 })
+
+tumour
