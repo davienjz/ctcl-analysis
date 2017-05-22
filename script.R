@@ -207,12 +207,32 @@ df7[] <- lapply(df7, function(column) if(is.factor(column)) factor(column) else 
 
 write.csv(df7, file = "workingfile7.csv")
 
+###analysis of panel 5
+#subset panel 5
+dfpan5 <- subset(df7, expression == "ifngamma"|expression == "il4"|expression == "il10"|expression == "il17a")
+dfpan5
+
+write.csv(dfpan5, file = "workingfilepan5.csv")
+
+##drop gates that are not 'all'
+dfpan5a <- dfpan5[!dfpan5$Gate == "All",]
+
+##Calculate iMFI
+#convert gated percentage to decimal
+dfpan5a$gated <- dfpan5a$gated/100
+dfpan5a
+#calculate iMFI
+dfpan5a$iMFI <- dfpan5a$gmean * dfpan5a$gated
+
+
+
+
 ### analyse clonal data that has geometric means for panels 1-4
 #drop pcgate and take clonal
 df8 <- df7[df7$clone == TRUE & !is.na(df7$gmean),!(names(df7) %in% c("pcgate"))]
 
 #drop gates that are not 'all'
-df8b <- df8[df8$Gate == "All",]
+df8b <- df8[!df8$Gate == "All",]
 
 #just take panel3 histogram data
 exclude <- df8b$Y.Parameter != "Count" & df8b$Protocol == "panel3"
@@ -259,7 +279,7 @@ col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clini
 
 col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(df14names)[[2]],each = length(dimnames(df14names)[[3]]))))]
 
-col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]],))]
+col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]]))]
 
 col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+5]
 
@@ -270,7 +290,7 @@ heatmap.2(df14,
 					trace = "none",
 					Colv = NA,
 					RowSideColors = col1,
-					ColSideColors = col2,
+					ColSideColors = col2
 )
 
 
