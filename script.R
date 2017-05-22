@@ -86,8 +86,7 @@ df4 <- merge(df3,df_samples,by="samplenumber")
 
 #convert all empty spaces and N/A to NA AND make numeric
 
-df4[df4 == ""] <- NA
-df4[df4 == "N/A"] <- NA
+df4[df4 == "" | df4 == "N/A"] <- NA
 
 numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode", "X.Stdev",
               "X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode",
@@ -130,13 +129,14 @@ df5[select2,c("expression","pcgate")]
 
 ##find panel 5 gates
 panel5expression <- c("ifngamma","il4","il10","il17a")
-select3a <- df5$Protocol == "panel5"
+select3a <- df5$ï..Protocol == "panel5"
 select3b <- df5$X.Parameter %in% panel5expression
 select3c <- df5$Y.Parameter == "Count"
 select3d <- df5$Gate != "All"
 select3 <- select3a & select3b & select3c & select3d
 
 df5[select3,"pcgate"] <- df5[select3,"X.Gated"]
+
 
 #check data
 table(df5$samplenumber,df5$clone)
@@ -175,7 +175,7 @@ rows1 <- c("pd1",
 					 )
 
 #drop panel3 il10 and tfgb1 to prevent confusion with panel5
-rows2_select <- !(df6$Protocol == "panel3" & df6$X.Parameter %in% c("il10","tgfb1"))
+rows2_select <- !(df6$ï..Protocol == "panel3" & df6$X.Parameter %in% c("il10","tgfb1"))
 mean(rows2_select)
 
 rows1_select <- df6$expression %in% rows1 
