@@ -1,3 +1,13 @@
+#package installation
+install.packages("RColorBrewer")
+install.packages("reshape2")
+install.packages("abind")
+install.packages("gplots")
+install.packages("EnvStats")
+install.packages("xtable")
+install.packages("corrgram")
+
+
 #libraries
 library(RColorBrewer)
 library(reshape2)
@@ -74,9 +84,14 @@ df4 <- merge(df3,df_samples,by="samplenumber")
 
 ### tidy dataframe
 
-#make numeric
-numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode","X.Stdev","X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode","Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean")
+#convert all empty spaces and N/A to NA AND make numeric
 
+df4[df4 == ""] <- NA
+df4[df4 == "N/A"] <- NA
+
+numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode", "X.Stdev",
+              "X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode",
+              "Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean") 
 numerics_select <- names(df4) %in% numerics
 
 df4[,numerics_select] <- lapply(df4[,numerics_select], function(column) as.numeric(column))
