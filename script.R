@@ -230,11 +230,20 @@ write.csv(dfpan5a, file = "workingfileiMFI.csv")
 dfpan5b <- subset(dfpan5a, clone == TRUE & !is.na(dfpan5a$iMFI))
 write.csv(dfpan5b, file = "clonalpanel5.csv")
 
+
 #melt dataframe
 dfpan5c <- melt(dfpan5b,c("samplenumber","population","expression"),c("iMFI"))
+dfpan5c
+
+###take tils and tumour
+tiltum <- subset(dfpan5c, population == "tumour" | population =="til_cd8" | population == "til_cd4")
+tiltum
 
 #cast to 3D array
-dfpan5d <- acast(dfpan5c, samplenumber ~ population + expression)
+dfpan5d <- acast(tiltum, samplenumber ~ population + expression)
+dfpan5d
+
+
 
 #names
 justfornames <- acast(dfpan5c, samplenumber ~ population ~ expression)
