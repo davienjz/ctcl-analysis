@@ -15,6 +15,7 @@ library(gplots)
 library(EnvStats)
 library(xtable)
 library(corrgram)
+library(tsne)
 
 ### import functions
 source("functions.R")
@@ -33,14 +34,6 @@ df_samples <- read.csv("data/samples.csv")
 df <- rbind(panel1, panel2, panel3, panel4, panel5)
 
 writeCsv(df)
-
-### filename generation
-count <<- 0
-gen <- function(x){
-	count <<- count + 1
-	countf <- formatC(count, width = 2, format = "d", flag = "0")
-	paste0(countf,x,".png")
-}
 
 ### extract sample number info
 
@@ -340,22 +333,23 @@ df13 <- df12[df12$population %in% c("tumourfc","cd4tilfc","cd8tilfc"),]
 
 #re-order by populations
 df14 <- acast(df13,samplenumber ~ population + expression)
+df14name1 <- dcast(df13,samplenumber ~ population + expression)
 df14names <- acast(df13, samplenumber ~ population ~ expression)
 
 #clinical groups
-clinical <- match(rownames(df14), df7$samplenumber)
+clinical <- match(df14name1$samplenumber, df7$samplenumber)
 
 #colours
-col_breaks <- c(seq(-1,-0.01,length=100),0,seq(0.01,1,length = 100),seq(1.01,2,length=100))
+col_breaks <- c(seq(-1.5,-0.01,length=200),0,seq(0.01,2.5,length = 200),seq(2.51,5,length=200))
 my_palette <- colorRampPalette(c("#3540FF","black","#D42C2C","#FF3535"))(n = length(col_breaks)-1)
 
-col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clinical]))+5]
+col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clinical]))+4]
 
 col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(df14names)[[2]],each = length(dimnames(df14names)[[3]]))))]
 
 col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]]))]
 
-col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+5]
+col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+4]
 
 #heatmap
 heatmap.2(df14,
@@ -364,8 +358,98 @@ heatmap.2(df14,
 					trace = "none",
 					Colv = NA,
 					RowSideColors = col1,
-					ColSideColors = col2
+					ColSideColors = col2,
+					symm = F,
+					symkey = F,
+					symbreaks = FALSE,
+					scale = "none",
+					margins = c(12,14),
+					dendrogram = "row",
+					labCol = rep(dimnames(df14names)[[3]], length(dimnames(df14names)[[2]])),
+					cexCol = 1.5,
+					cexRow = 1.5,
+					keysize = 1,
+					key.title = "Key",
+					key.xlab = "Fold Change"
 )
+
+#locator()
+
+leg <- legend(x = "topright",
+			 title = "Cell population",
+			 legend = c("CD4 TILs","Tumour Cells","CD8 TILs"),
+			 fill = c(col3),
+			 cex = 1.25
+			 )
+leg
+
+legend(x = leg$rect$left - 1.25 * leg$rect$w,
+			 y = leg$rect$top,
+			 title = "Stage of disease",
+			 legend = levels(factor(df7$sampletype[clinical])),
+			 fill = col4,
+			 cex = 1.25
+			 )
+
+### heatmap order by patient/pop
+#re-order by populations
+dh14 <- acast(df13,samplenumber + population ~ expression)
+dh14name1 <- dcast(df13,samplenumber + population ~ expression)
+dh14names <- acast(df13, samplenumber ~ population ~ expression)
+
+#clinical groups
+clinical <- match(dh14name1$samplenumber, df7$samplenumber)
+
+#colours
+col_breaks <- c(seq(-1.5,-0.01,length=200),0,seq(0.01,2.5,length = 200),seq(2.51,5,length=200))
+my_palette <- colorRampPalette(c("#3540FF","black","#D42C2C","#FF3535"))(n = length(col_breaks)-1)
+
+col1 <- palette(brewer.pal(3, "Set1"))[as.numeric(factor(dh14name1$population))]
+
+col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(dh14names)[[2]],each = length(dimnames(dh14names)[[3]]))))]
+
+col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(dh14names)[[2]]))]
+
+col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+4]
+
+#heatmap
+heatmap.2(dh14,
+					breaks = col_breaks,
+					col = my_palette,
+					trace = "none",
+					Colv = NA,
+					RowSideColors = col1,
+					#ColSideColors = col2,
+					symm = F,
+					symkey = F,
+					symbreaks = FALSE,
+					scale = "none",
+					margins = c(12,14),
+					dendrogram = "row",
+					labCol = rep(dimnames(dh14names)[[3]], length(dimnames(dh14names)[[2]])),
+					cexCol = 1.5,
+					cexRow = 0.8,
+					keysize = 1,
+					key.title = "Key",
+					key.xlab = "Fold Change"
+)
+
+#locator()
+
+leg <- legend(x = "topright",
+			 title = "Cell population",
+			 legend = c("CD4 TILs","Tumour Cells","CD8 TILs"),
+			 fill = c(col3),
+			 cex = 1.25
+			 )
+
+legend(x = leg$rect$left - 1.25 * leg$rect$w,
+			 y = leg$rect$top,
+			 title = "Stage of disease",
+			 legend = levels(factor(df7$sampletype[clinical])),
+			 fill = col4,
+			 cex = 1.25
+			 )
 
 ### strip plots
 
@@ -374,4 +458,73 @@ df8c$population
 stripPlot(df8c,c("tumour","pb_cd4"))
 stripPlot(df8c,c("til_cd4","pb_cd4"))
 stripPlot(df8c,c("til_cd8","pb_cd8"))
+
+### PCA of populations+patients
+
+dpca1 <- t(dh14[complete.cases(dh14),])
+rowMeans(dpca1)
+s <- svd(dpca1-rowMeans(dpca1))
+
+pc1 <- s$d[1]*s$v[,1]
+pc2 <- s$d[2]*s$v[,2]
+
+dh14name1$samplenumber
+
+group <- factor(dh14name1$population)
+color1 <- brewer.pal(3,"Set1")
+
+png(gen("pca"))
+
+plot(pc1,
+		 pc2,
+		 xlab = "PC1",
+		 ylab = "PC2",
+		 col = c("green","red","blue"),
+		 type = "n"
+		 )
+
+text(pc1,
+		 pc2,
+		 labels = dh14name1$samplenumber,
+	 col = c("green","red","blue"),
+	 )
+
+dev.off()
+
+
+### plots of PCA variable colour
+
+pca_df <- df13
+pca_formula <- samplenumber + population ~ expression
+pca_colour <- "pdl2"
+
+plotPCA(pca_df, pca_formula, pca_colour)
+
+for (pca_colour in levels(pca_df$expression)){
+	plotPCA(pca_df, pca_formula, pca_colour)
+}
+
+### tSNE of populations+patients
+
+#uncomment to run tSNE
+#output <- tsne(t(dpca1), perplexity = 15, max_iter = 3000)
+
+str(output)
+
+png(gen("tsne"))
+
+plot(output[,1],
+		 output[,2],
+		 type = "n",
+		 col = c("green","red","blue"),
+		 pch = 19
+		 )
+
+text(output[,1],
+		 output[,2],
+		 labels = dh14name1$samplenumber,
+		 col = c("green","red","blue"),
+		 )
+
+dev.off()
 
