@@ -16,6 +16,9 @@ library(EnvStats)
 library(xtable)
 library(corrgram)
 library(tsne)
+library(quantmod)
+library(xts)
+library(igraph)
 
 ### import functions
 source("functions.R")
@@ -528,3 +531,69 @@ text(output[,1],
 
 dev.off()
 
+### correlation analysis
+
+
+dc14 <- acast(df13, samplenumber ~ population + expression)
+dc15 <- dc14[complete.cases(dc14),]
+dc16 <- cov(dc15)
+
+max(dc16)
+min(dc16)
+cov_breaks <- c(seq(-0.3,-0.01,length = 100),0,seq(0.01,0.8,length = 100))
+cov_palette <- colorRampPalette(c("#3540FF","black","#D42C2C"))(n = length(cov_breaks)-1)
+
+heatmap.2(dc16,
+					margins = c(10,10),
+					trace = "none",
+					col = cov_palette,
+					breaks = cov_breaks
+					)
+
+#get smaller labels
+df13
+dn14 <- acast(df13,samplenumber ~ expression ~ population)
+dn15 <- dn14[complete.cases(dc14),,]
+dimnames(dn15)[[3]] <- c("cd4","tmr","cd8")
+dn16 <- melt(dn15)
+colnames(dn16) <- c("samplenumber","expression","population","value")
+dn17 <- acast(dn16, samplenumber ~ expression + population)
+dim(dn15)
+
+#define colours and breaks
+net_breaks <- c(seq(-1,-0.01,length=100),0,seq(0.01,1,length = 100)) 
+net_palette <- colorRampPalette(c("red","white","#006104"))(n = length(net_breaks)-1) 
+
+#define threshold for network
+thres_pos <- 0.7
+thres_neg <- -0.4
+
+#get correlation matrix, taken upper triangle and those above threshold
+dn18<- cor(dn17, method="spearman")
+dn18[ lower.tri(dn18, diag=TRUE) ] <- 0
+dn18[ thres_neg < dn18 & dn18 < thres_pos] <- 0
+
+#create graph
+graph <- graph.adjacency(dn18, weighted=TRUE, mode="upper", diag = FALSE)
+
+#assign weights graph
+E(graph)$weight <- t(dn18)[abs(t(dn18)) >= thres]
+
+#find colours for weights
+colours <- cut(E(graph)$weight, breaks = net_breaks, labels = net_palette)
+colours <- as.character(colours)
+
+#assign colors to graph
+E(graph)$color <- colours
+V(graph)$color <- rep(c("#B0DCFF","#FFB0B1","#D2FFB0"),dim(dn15)[2])
+
+#assign width of lines to graph
+E(graph)$width <- 2
+
+#assign graph layout
+graph$layout <- layout.fruchterman.reingold
+
+#delete vertices which aren't connected
+graph <- delete.vertices(graph,which(degree(graph) < 1))
+
+plot(graph)
