@@ -34,7 +34,6 @@ panel2 <- read.csv("data/panel2.csv", fileEncoding = "UTF-8-BOM")
 panel3 <- read.csv("data/panel3.csv", fileEncoding = "UTF-8-BOM")
 panel4 <- read.csv("data/panel4.csv", fileEncoding = "UTF-8-BOM")
 panel5 <- read.csv("data/panel5.csv", fileEncoding = "UTF-8-BOM")
-head(panel1)
 
 df_facs <- read.csv("data/sample_facs_data.csv")
 df_samples <- read.csv("data/samples.csv")
@@ -223,9 +222,6 @@ writeCsv(df7)
 ###analysis of panel 5
 #subset panel 5
 dfpan5 <- subset(df7, expression == "ifngamma"|expression == "il4"|expression == "il10"|expression == "il17a")
-dfpan5
-
-writeCsv(dfpan5)
 
 ##drop gates that are not 'all'
 dfpan5a <- dfpan5[!dfpan5$Gate == "All",]
@@ -241,34 +237,26 @@ dfpan5a$iMFI <- dfpan5a$gmean * dfpan5a$gated
 #subset clonal
 dfpan5b <- subset(dfpan5a, clone == TRUE & !is.na(dfpan5a$iMFI))
 
+#produce hierarchy in expression (ifn, il4, il17a, il10 AND cd4.til, tumour, cd8.til)
+#refactor
+dfpan5b[] <- lapply(dfpan5b, function(column) if(is.factor(column)) factor(column) else column)
+
+#order levels
+dfpan5b$expression<- factor(dfpan5b$expression, levels = c("ifngamma", "il4", "il17a", "il10"))
+dfpan5b$population <- factor(dfpan5b$population, levels = c("til_cd4", "tumour", "til_cd8", "pb_cd4",
+                                                            "pb_cd8", "cd4skin", "cd4blood", "tcrvb_pos_blood" ))
+
 #melt dataframe
 dfpan5c <- melt(dfpan5b,c("samplenumber","population","expression"),c("iMFI"))
-dfpan5c
 
 ###take tils and tumour
 tiltum <- subset(dfpan5c, population == "tumour" | population =="til_cd8" | population == "til_cd4")
-tiltum
 
 #cast to 3D array
 dfpan5d <- acast(tiltum, samplenumber ~ population + expression)
-dfpan5d
-
-##organise
-dfpan5d[, c("til_cd4_ifngamma",
-        "til_cd4_il4",
-        "til_cd4_il17a",
-        "til_cd4_il10",
-        "tumour_ifngamma",
-        "tumour_il4",
-        "tumour_il17a",
-        "tumour_il10",
-        "til_cd8_ifngamma",
-        "til_cd8_il4",
-        "til_cd8_il17a",
-        "til_cd8_il10")]
 
 #names
-justfornames <- acast(dfpan5c, samplenumber ~ population ~ expression)
+justfornames <- acast(dfpan5b, samplenumber ~ population ~ expression)
 
 naming <- justfornames[, , c("ifngamma",
                                "il4",
@@ -306,10 +294,10 @@ heatmap.2(dfpan5d,
           labCol = rep(dimnames(naming)[[3]], 
                        length(dimnames(naming)[[3]])))
 
-text(0.3266486, 0.9, labels = "CD4 TIL")
+#locator()
+text(-1.360649, 0.9, labels = "CD4 TIL")
 text(0.5275845, 0.9, labels = "TUMOUR" )
-text(0.7384352, 0.9, labels = "CD8 TIL")
-
+text(2.23224, 0.9, labels = "CD8 TIL")
 
 ### analyse clonal data that has geometric means for panels 1-4
 #drop pcgate and take clonal
