@@ -85,6 +85,7 @@ df4 <- merge(df3,df_samples,by="samplenumber")
 #convert all empty spaces and N/A to NA AND make numeric
 df4[df4 == "" | df4 == "N/A"] <- NA
 
+### correct numerics
 numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode", "X.Stdev",
               "X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode",
               "Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean") 
@@ -92,10 +93,22 @@ numerics_select <- names(df4) %in% numerics
 
 df4[,numerics_select] <- lapply(df4[,numerics_select], function(column) as.numeric(column))
 
+### create from samplenumber 'lesionnumber'
+lesion_pos_fix <- regexpr("CTCL[[:digit:]]{3}[A-Z]{2}[ ]?[[:digit:]]{2}",
+									 df4$samplenumber,
+									 perl = TRUE)
+
+lesionnumber <- substr(df4$samplenumber, lesion_pos_fix,lesion_pos_fix+attributes(lesion_pos_fix)[[1]]-1)
+
+writeCsv(df4)
+
+df4b <- cbind(lesionnumber, df4)
+writeCsv(df4b)
+
 #drop unnecessary columns
 drop <- c("notes.x","notes.y","location.1","run","run.","clonotypic","vb","pe_fitc_ab",
 					"galliosfilenumber","galliospatientnumber","Data.Set")
-df5 <- df4[,!(names(df4) %in% drop)]
+df5 <- df4b[,!(names(df4b) %in% drop)]
 
 writeCsv(df5)
 
@@ -134,7 +147,6 @@ select3d <- df5$Gate != "All"
 select3 <- select3a & select3b & select3c & select3d
 
 df5[select3,"pcgate"] <- df5[select3,"X.Gated"]
-
 
 #check data
 table(df5$samplenumber,df5$clone)
@@ -327,6 +339,7 @@ tumourfc <- asinh(df10[,"tumour",]) - asinh(df10[,"pb_cd4",])
 cd8tilfc <- asinh(df10[,"til_cd8",]) - asinh(df10[,"pb_cd8",])
 
 #fold change of fold change
+tumourfc2 <- tumourfc - cd4tilfc
 
 df11 <- abind(df10, "cd4tilfc" = cd4tilfc, "tumourfc" = tumourfc, "cd8tilfc" = cd8tilfc, along = 2)
 
@@ -356,13 +369,13 @@ col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[
 
 col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+4]
 
-#heatmap
+#clonal heatmap
 heatmap.2(df14,
 					breaks = col_breaks,
 					col = my_palette,
 					trace = "none",
 					Colv = NA,
-					RowSideColors = col1,
+#					RowSideColors = col1,
 					ColSideColors = col2,
 					symm = F,
 					symkey = F,
@@ -395,6 +408,20 @@ legend(x = leg$rect$left - 1.25 * leg$rect$w,
 			 fill = col4,
 			 cex = 1.25
 			 )
+
+#clonal foldchange heatmap
+heatmap.2(tumourfc2,
+					col = my_palette,
+					breaks = col_breaks,
+					Colv = NA,
+					dendrogram = "row",
+					scale = "none",
+					trace = "none",
+					symm = FALSE,
+					symkey = FALSE,
+					symbreaks = FALSE,
+					margins = c(12,14),
+					)
 
 ### heatmap order by patient/pop
 #re-order by populations
