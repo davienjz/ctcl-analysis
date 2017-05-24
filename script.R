@@ -161,6 +161,7 @@ writeCsv(df6)
 
 columns <- c("samplenumber",
              "studynumber",
+						 "lesionnumber",
              "run_date",
              "clone",
              "vbeta",
@@ -190,7 +191,6 @@ rows1 <- c("pd1",
 					 "lag3",
 					 "hladr",
 					 "cd25",
-					 "foxp3",
 					 "fas",
 					 "fasl",
 					 "mhc1",
@@ -198,8 +198,8 @@ rows1 <- c("pd1",
 					 "il4",
 					 "il10",
 					 "il17a",
-					 "treg",
-					 "foxp3_pos"
+					 "treg", #this is gated data
+					 "foxp3_pos" #this is gated data
 					 )
 
 #drop panel3 il10 and tfgb1 to prevent confusion with panel5
@@ -495,7 +495,7 @@ stripPlot(df8c,c("til_cd8","pb_cd8"))
 
 dpca1 <- t(dh14[complete.cases(dh14),])
 rowMeans(dpca1)
-s <- svd(dpca1-rowMeans(dpca1))
+s <- svd(dpca1)
 
 pc1 <- s$d[1]*s$v[,1]
 pc2 <- s$d[2]*s$v[,2]
@@ -637,3 +637,91 @@ graph$layout <- layout.fruchterman.reingold
 graph <- delete.vertices(graph,which(degree(graph) < 1))
 
 plot(graph)
+
+
+### Analysis with all data
+
+# start from df7
+
+#select clonal data
+
+da8 <- df7[df7$clone == TRUE,]
+writeCsv(da8)
+
+#combine gmean and gated data into a new value that takes the arcsinh of percentage
+
+all_gmean <- c("pd1",
+							 "pdl1",
+							 "pdl2",
+							 "tigit",
+							 "tim3",
+							 "hladr",
+							 "lag3",
+							 "gal9",
+							 "cd25",
+							 "fas",
+							 "fasl",
+							 "mhc1"
+							 )
+
+all_gated <- c("ifng",
+							 "il4",
+							 "il17a",
+							 "il10",
+							 "treg",
+							 "foxp3_pos"
+							 )
+
+#find gmean data
+selectda8_ma <- da8$expression %in% all_gmean
+selectda8_mb <- da8$Gate == "All"
+
+#find percentage gated data
+selectda8_ga <- da8$expression %in% all_gated
+selectda8_gb <- da8$Gate != "All"
+
+#take AND of above
+selectda8_m <- selectda8_ma & selectda8_mb
+selectda8_g <- selectda8_ga & selectda8_gb
+
+#write values into 'e' from gmean and pcgate
+da8[selectda8_m,"e"] <- da8[selectda8_m,"gmean"]
+da8[selectda8_g,"e"] <- da8[selectda8_g,"pcgate"]
+
+#find data we need to keep
+selectda8 <- selectda8_m | selectda8_g
+
+da9 <- da8[selectda8,]
+writeCsv(da9)
+
+###create heatmap data
+
+da10 <- melt(da9, c("lesionnumber","population","expression"),c("e"))
+
+da11 <- acast(da10, lesionnumber ~ population ~ expression)
+
+#take the fold change of only the gmean values
+exp_names <- dimnames(da11)[[3]]
+subset_gmean <- exp_names %in% all_gmean
+subset_gated <- exp_names %in% all_gated
+
+#create some space
+empty <- array(numeric(),c(dim(da11)[1],1,dim(da11)[3]))
+da11 <- abind(da11,"cd4tilfc" = empty, along = 2)
+da11 <- abind(da11,"tumourfc" = empty, along = 2)
+da11 <- abind(da11,"cd8tilfc" = empty, along = 2)
+
+#add fold change for just gmean data
+da11[,"cd4tilfc",subset_gmean] <- asinh(da11[,"til_cd4", subset_gmean]) - asinh(da11[,"pb_cd4", subset_gmean])
+
+da11[,"tumourfc",subset_gmean] <- asinh(da11[,"tumour", subset_gmean]) - asinh(da11[,"pb_cd4", subset_gmean])
+
+da11[,"cd8tilfc",subset_gmean] <- asinh(da11[,"til_cd8", subset_gmean]) - asinh(da11[,"pb_cd4", subset_gmean])
+
+da11[,"cd4tilfc",subset_gated] <- asinh(da11[,"til_cd4", subset_gated])
+
+da11[,"tumourfc",subset_gated] <- asinh(da11[,"tumour", subset_gated])
+
+da11[,"cd8tilfc",subset_gated] <- asinh(da11[,"til_cd8", subset_gated])
+
+writeCsv(da11)
