@@ -22,21 +22,21 @@ library(igraph)
 
 ### import functions
 source("functions.R")
+source("diversity.R")
 
 ### import data
-panel1 <- read.csv("data/panel1.csv")
-panel2 <- read.csv("data/panel2.csv")
-panel3 <- read.csv("data/panel3.csv")
-panel4 <- read.csv("data/panel4.csv")
-panel5 <- read.csv("data/panel5.csv")
+panel1 <- read.csv("data/panel1.csv", fileEncoding = "UTF-8-BOM")
+panel2 <- read.csv("data/panel2.csv", fileEncoding = "UTF-8-BOM")
+panel3 <- read.csv("data/panel3.csv", fileEncoding = "UTF-8-BOM")
+panel4 <- read.csv("data/panel4.csv", fileEncoding = "UTF-8-BOM")
+panel5 <- read.csv("data/panel5.csv", fileEncoding = "UTF-8-BOM")
+head(panel1)
 
 df_facs <- read.csv("data/sample_facs_data.csv")
 df_samples <- read.csv("data/samples.csv")
 
 ### merge data
 df <- rbind(panel1, panel2, panel3, panel4, panel5)
-
-writeCsv(df)
 
 ### extract sample number info
 
@@ -140,7 +140,7 @@ df5[select2,c("expression","pcgate")]
 
 ##find panel 5 gates
 panel5expression <- c("ifngamma","il4","il10","il17a")
-select3a <- df5$ï..Protocol == "panel5"
+select3a <- df5$Protocol == "panel5"
 select3b <- df5$X.Parameter %in% panel5expression
 select3c <- df5$Y.Parameter == "Count"
 select3d <- df5$Gate != "All"
