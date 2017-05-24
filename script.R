@@ -134,7 +134,7 @@ df5[select2,c("expression","pcgate")]
 
 ##find panel 5 gates
 panel5expression <- c("ifngamma","il4","il10","il17a")
-select3a <- df5$ï..Protocol == "panel5"
+select3a <- df5$Protocol == "panel5"
 select3b <- df5$X.Parameter %in% panel5expression
 select3c <- df5$Y.Parameter == "Count"
 select3d <- df5$Gate != "All"
