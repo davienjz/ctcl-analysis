@@ -487,7 +487,7 @@ stripPlot(df8c,c("til_cd8","pb_cd8"))
 
 dpca1 <- t(dh14[complete.cases(dh14),])
 rowMeans(dpca1)
-s <- svd(dpca1-rowMeans(dpca1))
+s <- svd(dpca1)
 
 pc1 <- s$d[1]*s$v[,1]
 pc2 <- s$d[2]*s$v[,2]
@@ -510,7 +510,7 @@ plot(pc1,
 text(pc1,
 		 pc2,
 		 labels = dh14name1$samplenumber,
-	 col = c("green","red","blue"),
+	 col = c("green","red","blue")
 	 )
 
 dev.off()
