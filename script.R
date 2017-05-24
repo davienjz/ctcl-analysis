@@ -21,11 +21,12 @@ source("functions.R")
 source("diversity.R")
 
 ### import data
-panel1 <- read.csv("data/panel1.csv")
-panel2 <- read.csv("data/panel2.csv")
-panel3 <- read.csv("data/panel3.csv")
-panel4 <- read.csv("data/panel4.csv")
-panel5 <- read.csv("data/panel5.csv")
+panel1 <- read.csv("data/panel1.csv", fileEncoding = "UTF-8-BOM")
+panel2 <- read.csv("data/panel2.csv", fileEncoding = "UTF-8-BOM")
+panel3 <- read.csv("data/panel3.csv", fileEncoding = "UTF-8-BOM")
+panel4 <- read.csv("data/panel4.csv", fileEncoding = "UTF-8-BOM")
+panel5 <- read.csv("data/panel5.csv", fileEncoding = "UTF-8-BOM")
+head(panel1)
 
 df_facs <- read.csv("data/sample_facs_data.csv")
 df_samples <- read.csv("data/samples.csv")
@@ -33,8 +34,9 @@ df_samples <- read.csv("data/samples.csv")
 ### merge data
 df <- rbind(panel1, panel2, panel3, panel4, panel5)
 
-writeCsv(df)
 
+writeCsv(df)
+head(df)
 ### filename generation
 count <<- 0
 gen <- function(x){
