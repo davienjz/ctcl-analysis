@@ -6,6 +6,10 @@
 #install.packages("EnvStats")
 #install.packages("xtable")
 #install.packages("corrgram")
+#install.packages("tsne")
+#install.packages("quantmod")
+#install.packages("xts")
+#install.packages("igraph")
 
 #libraries
 library(RColorBrewer)
