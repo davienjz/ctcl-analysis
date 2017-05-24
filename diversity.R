@@ -2,10 +2,6 @@
 
 df_div <- read.csv("data/simpsons_data.csv", fileEncoding = "UTF-8-BOM")
 
-### import functions
-
-source("functions.R")
-
 ### extract sample number info
 
 # find CTCL plus rest of string 
@@ -26,8 +22,6 @@ link <- read.csv("data/diversity_link.csv")
 
 #bind columns
 diversity <- cbind(df_div, diversitynumber)
-head(diversity)
 
 #merge files
 diversity_df <- merge(diversity,link,by="diversitynumber")
-diversity_df
