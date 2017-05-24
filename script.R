@@ -664,7 +664,7 @@ all_gmean <- c("pd1",
 							 "mhc1"
 							 )
 
-all_gated <- c("ifng",
+all_gated <- c("ifngamma",
 							 "il4",
 							 "il17a",
 							 "il10",
@@ -710,6 +710,7 @@ empty <- array(numeric(),c(dim(da11)[1],1,dim(da11)[3]))
 da11 <- abind(da11,"cd4tilfc" = empty, along = 2)
 da11 <- abind(da11,"tumourfc" = empty, along = 2)
 da11 <- abind(da11,"cd8tilfc" = empty, along = 2)
+da11 <- abind(da11,"tumourcd4" = empty, along = 2)
 
 #add fold change for just gmean data
 da11[,"cd4tilfc",subset_gmean] <- asinh(da11[,"til_cd4", subset_gmean]) - asinh(da11[,"pb_cd4", subset_gmean])
@@ -724,4 +725,58 @@ da11[,"tumourfc",subset_gated] <- asinh(da11[,"tumour", subset_gated])
 
 da11[,"cd8tilfc",subset_gated] <- asinh(da11[,"til_cd8", subset_gated])
 
-writeCsv(da11)
+da11[,"tumourcd4",] <- asinh(da11[,"tumour", ]) - asinh(da11[,"til_cd4", ])
+
+### data for stuff here, da11 now has all populations, including foldchange and tumour-tilcd4 change
+
+da12 <- melt(da11)
+
+names(da12) <- c("lesionnumber","population","expression","e")
+
+### foldchange heatmap three across
+
+da13 <- da12[da12$population %in% c("tumourfc","cd4tilfc","cd8tilfc"),]
+
+da14 <- acast(da13, lesionnumber ~ population + expression, value.var = "e")
+da14names <- acast(da13, lesionnumber ~ population ~ expression, value.var = "e")
+take <- complete.cases(da14)
+da15 <- da14[take,]
+da15names <- da14names[take,,]
+
+col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(da15names)[[2]],each = length(dimnames(da15names)[[3]]))))]
+
+heatmap.2(
+					da15,
+					ColSideColors = col2,
+					Colv = NA,
+					dendrogram = "row",
+					breaks = col_breaks,
+					col = my_palette,
+					trace = "none",
+					symm = FALSE,
+					symkey = FALSE,
+					symbreaks = FALSE,
+					scale = "none",
+					margins = c(12,14),
+					)
+#PCA
+pca_df <- da13
+pca_formula <- lesionnumber + population ~ expression
+pca_colour <- "pd1"
+plotPCA(pca_df, pca_formula, pca_colour)
+
+output <- tsne(t(da15), perplexity = 15, max_iter = 3000)
+
+plot(output[,1],
+		 output[,2],
+		 type = "n",
+		 col = c("green","red","blue"),
+		 pch = 19
+		 )
+dimnames(da15names)[[1]]
+
+text(output[,1],
+		 output[,2],
+		 labels = dimnames(da15names)[[1]],
+		 col = c("green","red","blue"),
+		 )
