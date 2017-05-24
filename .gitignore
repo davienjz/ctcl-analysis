@@ -5,4 +5,5 @@ analysis.txt
 workingfile*
 figures/*.png
 output/*.csv
-
+.Rhistory
+*.Rproj
