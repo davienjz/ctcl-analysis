@@ -326,6 +326,8 @@ tumourfc <- asinh(df10[,"tumour",]) - asinh(df10[,"pb_cd4",])
 
 cd8tilfc <- asinh(df10[,"til_cd8",]) - asinh(df10[,"pb_cd8",])
 
+#fold change of fold change
+
 df11 <- abind(df10, "cd4tilfc" = cd4tilfc, "tumourfc" = tumourfc, "cd8tilfc" = cd8tilfc, along = 2)
 
 names(dimnames(df11)) <- c("samplenumber","population","expression")
@@ -512,24 +514,24 @@ for (pca_colour in levels(pca_df$expression)){
 #uncomment to run tSNE
 #output <- tsne(t(dpca1), perplexity = 15, max_iter = 3000)
 
-str(output)
+#str(output)
 
-png(gen("tsne"))
+#png(gen("tsne"))
 
-plot(output[,1],
-		 output[,2],
-		 type = "n",
-		 col = c("green","red","blue"),
-		 pch = 19
-		 )
+#plot(output[,1],
+#		 output[,2],
+#		 type = "n",
+#		 col = c("green","red","blue"),
+#		 pch = 19
+#		 )
 
-text(output[,1],
-		 output[,2],
-		 labels = dh14name1$samplenumber,
-		 col = c("green","red","blue"),
-		 )
+#text(output[,1],
+#		 output[,2],
+#		 labels = dh14name1$samplenumber,
+#		 col = c("green","red","blue"),
+#		 )
 
-dev.off()
+#dev.off()
 
 ### correlation analysis
 
