@@ -568,22 +568,33 @@ net_palette <- colorRampPalette(c("red","white","#006104"))(n = length(net_break
 
 #define threshold for network
 thres_pos <- 0.7
-thres_neg <- -0.4
+thres_neg <- -0.2
 
 #get correlation matrix, taken upper triangle and those above threshold
 dn18<- cor(dn17, method="spearman")
+#dn18["pd1_tmr","pdl1_tmr"] <- -0.9 # test correct weights
 dn18[ lower.tri(dn18, diag=TRUE) ] <- 0
-dn18[ thres_neg < dn18 & dn18 < thres_pos] <- 0
+net_deselect <- thres_neg < dn18 & dn18 < thres_pos
+dn18[net_deselect] <- 0
+
+#invert matrix to arrange values in same order as E(graph)
+dn19 <- t(dn18)
+net_weights <- dn19[dn19!=0]
+writeCsv(dn19)
 
 #create graph
 graph <- graph.adjacency(dn18, weighted=TRUE, mode="upper", diag = FALSE)
 
 #assign weights graph
-E(graph)$weight <- t(dn18)[abs(t(dn18)) >= thres]
+E(graph)$weight <- net_weights
+E(graph)
 
 #find colours for weights
 colours <- cut(E(graph)$weight, breaks = net_breaks, labels = net_palette)
 colours <- as.character(colours)
+
+#find absolute weights
+E(graph)$weight
 
 #assign colors to graph
 E(graph)$color <- colours
