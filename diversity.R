@@ -5,12 +5,16 @@ df_div <- read.csv("data/simpsons_data.csv")
 
 # find CTCL plus rest of string 
 pos <- regexpr(
-  "CTCL[[:digit:]]{3}[A-Z]{2}[ ]?[[:digit:]]{2}[A-Z]{0,2}",
+  "CTCL[[:digit:]]{3}[A-Z]{2}[ ]?[[:digit:]]{2}[A-S | U-Z]{0,1}",
   df_div$Data.Set,
   perl = TRUE)
 
 samplestring <- substr(df_div$Data.Set,pos,pos+attributes(pos)[[1]]-1)
 
 #find the sample number
-diversitynumber <- gsub(" ","",samplestring, fixed=TRUE)
-levels(as.factor(diversitynumber))
+diversitynum <- gsub(" ","",samplestring, fixed=TRUE)
+diversitynumber <- levels(as.factor(diversitynum))
+diversitynumber
+### import functions
+source("functions.R")
+writeCsv(diversitynumber)
