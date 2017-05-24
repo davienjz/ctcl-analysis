@@ -15,6 +15,10 @@ library(gplots)
 library(EnvStats)
 library(xtable)
 library(corrgram)
+library(tsne)
+library(quantmod)
+library(xts)
+library(igraph)
 
 ### import functions
 source("functions.R")
@@ -33,17 +37,6 @@ df_samples <- read.csv("data/samples.csv")
 
 ### merge data
 df <- rbind(panel1, panel2, panel3, panel4, panel5)
-
-
-writeCsv(df)
-head(df)
-### filename generation
-count <<- 0
-gen <- function(x){
-	count <<- count + 1
-	countf <- formatC(count, width = 2, format = "d", flag = "0")
-	paste0(countf,x,".png")
-}
 
 ### extract sample number info
 
@@ -92,6 +85,7 @@ df4 <- merge(df3,df_samples,by="samplenumber")
 #convert all empty spaces and N/A to NA AND make numeric
 df4[df4 == "" | df4 == "N/A"] <- NA
 
+### correct numerics
 numerics <- c("X.Total","X.Gated","X.Med","X.AMean","X.Mode", "X.Stdev",
               "X.CV","HP.X.CV","X.Min","X.Max","X.GMean","Y.Med","Y.AMean","Y.Mode",
               "Y.Stdev","Y.CV","HP.Y.CV","Y.Min","Y.Max","Y.GMean") 
@@ -99,10 +93,22 @@ numerics_select <- names(df4) %in% numerics
 
 df4[,numerics_select] <- lapply(df4[,numerics_select], function(column) as.numeric(column))
 
+### create from samplenumber 'lesionnumber'
+lesion_pos_fix <- regexpr("CTCL[[:digit:]]{3}[A-Z]{2}[ ]?[[:digit:]]{2}",
+									 df4$samplenumber,
+									 perl = TRUE)
+
+lesionnumber <- substr(df4$samplenumber, lesion_pos_fix,lesion_pos_fix+attributes(lesion_pos_fix)[[1]]-1)
+
+writeCsv(df4)
+
+df4b <- cbind(lesionnumber, df4)
+writeCsv(df4b)
+
 #drop unnecessary columns
 drop <- c("notes.x","notes.y","location.1","run","run.","clonotypic","vb","pe_fitc_ab",
 					"galliosfilenumber","galliospatientnumber","Data.Set")
-df5 <- df4[,!(names(df4) %in% drop)]
+df5 <- df4b[,!(names(df4b) %in% drop)]
 
 writeCsv(df5)
 
@@ -141,7 +147,6 @@ select3d <- df5$Gate != "All"
 select3 <- select3a & select3b & select3c & select3d
 
 df5[select3,"pcgate"] <- df5[select3,"X.Gated"]
-
 
 #check data
 table(df5$samplenumber,df5$clone)
@@ -333,6 +338,9 @@ tumourfc <- asinh(df10[,"tumour",]) - asinh(df10[,"pb_cd4",])
 
 cd8tilfc <- asinh(df10[,"til_cd8",]) - asinh(df10[,"pb_cd8",])
 
+#fold change of fold change
+tumourfc2 <- tumourfc - cd4tilfc
+
 df11 <- abind(df10, "cd4tilfc" = cd4tilfc, "tumourfc" = tumourfc, "cd8tilfc" = cd8tilfc, along = 2)
 
 names(dimnames(df11)) <- c("samplenumber","population","expression")
@@ -343,32 +351,137 @@ df13 <- df12[df12$population %in% c("tumourfc","cd4tilfc","cd8tilfc"),]
 
 #re-order by populations
 df14 <- acast(df13,samplenumber ~ population + expression)
+df14name1 <- dcast(df13,samplenumber ~ population + expression)
 df14names <- acast(df13, samplenumber ~ population ~ expression)
 
 #clinical groups
-clinical <- match(rownames(df14), df7$samplenumber)
+clinical <- match(df14name1$samplenumber, df7$samplenumber)
 
 #colours
-col_breaks <- c(seq(-1,-0.01,length=100),0,seq(0.01,1,length = 100),seq(1.01,2,length=100))
+col_breaks <- c(seq(-1.5,-0.01,length=200),0,seq(0.01,2.5,length = 200),seq(2.51,5,length=200))
 my_palette <- colorRampPalette(c("#3540FF","black","#D42C2C","#FF3535"))(n = length(col_breaks)-1)
 
-col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clinical]))+5]
+col1 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(df7$sampletype[clinical]))+4]
 
 col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(df14names)[[2]],each = length(dimnames(df14names)[[3]]))))]
 
 col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(df14names)[[2]]))]
 
-col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+5]
+col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+4]
 
-#heatmap
+#clonal heatmap
 heatmap.2(df14,
 					breaks = col_breaks,
 					col = my_palette,
 					trace = "none",
 					Colv = NA,
-					RowSideColors = col1,
-					ColSideColors = col2
+#					RowSideColors = col1,
+					ColSideColors = col2,
+					symm = F,
+					symkey = F,
+					symbreaks = FALSE,
+					scale = "none",
+					margins = c(12,14),
+					dendrogram = "row",
+					labCol = rep(dimnames(df14names)[[3]], length(dimnames(df14names)[[2]])),
+					cexCol = 1.5,
+					cexRow = 1.5,
+					keysize = 1,
+					key.title = "Key",
+					key.xlab = "Fold Change"
 )
+
+#locator()
+
+leg <- legend(x = "topright",
+			 title = "Cell population",
+			 legend = c("CD4 TILs","Tumour Cells","CD8 TILs"),
+			 fill = c(col3),
+			 cex = 1.25
+			 )
+leg
+
+legend(x = leg$rect$left - 1.25 * leg$rect$w,
+			 y = leg$rect$top,
+			 title = "Stage of disease",
+			 legend = levels(factor(df7$sampletype[clinical])),
+			 fill = col4,
+			 cex = 1.25
+			 )
+
+#clonal foldchange heatmap
+heatmap.2(tumourfc2,
+					col = my_palette,
+					breaks = col_breaks,
+					Colv = NA,
+					dendrogram = "row",
+					scale = "none",
+					trace = "none",
+					symm = FALSE,
+					symkey = FALSE,
+					symbreaks = FALSE,
+					margins = c(12,14),
+					)
+
+### heatmap order by patient/pop
+#re-order by populations
+dh14 <- acast(df13,samplenumber + population ~ expression)
+dh14name1 <- dcast(df13,samplenumber + population ~ expression)
+dh14names <- acast(df13, samplenumber ~ population ~ expression)
+
+#clinical groups
+clinical <- match(dh14name1$samplenumber, df7$samplenumber)
+
+#colours
+col_breaks <- c(seq(-1.5,-0.01,length=200),0,seq(0.01,2.5,length = 200),seq(2.51,5,length=200))
+my_palette <- colorRampPalette(c("#3540FF","black","#D42C2C","#FF3535"))(n = length(col_breaks)-1)
+
+col1 <- palette(brewer.pal(3, "Set1"))[as.numeric(factor(dh14name1$population))]
+
+col2 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(rep(dimnames(dh14names)[[2]],each = length(dimnames(dh14names)[[3]]))))]
+
+col3 <- palette(brewer.pal(8, "Pastel2"))[as.numeric(factor(dimnames(dh14names)[[2]]))]
+
+col4 <- palette(brewer.pal(8, "Pastel2"))[seq_along(levels(factor(df7$sampletype[clinical])))+4]
+
+#heatmap
+heatmap.2(dh14,
+					breaks = col_breaks,
+					col = my_palette,
+					trace = "none",
+					Colv = NA,
+					RowSideColors = col1,
+					#ColSideColors = col2,
+					symm = F,
+					symkey = F,
+					symbreaks = FALSE,
+					scale = "none",
+					margins = c(12,14),
+					dendrogram = "row",
+					labCol = rep(dimnames(dh14names)[[3]], length(dimnames(dh14names)[[2]])),
+					cexCol = 1.5,
+					cexRow = 0.8,
+					keysize = 1,
+					key.title = "Key",
+					key.xlab = "Fold Change"
+)
+
+#locator()
+
+leg <- legend(x = "topright",
+			 title = "Cell population",
+			 legend = c("CD4 TILs","Tumour Cells","CD8 TILs"),
+			 fill = c(col3),
+			 cex = 1.25
+			 )
+
+legend(x = leg$rect$left - 1.25 * leg$rect$w,
+			 y = leg$rect$top,
+			 title = "Stage of disease",
+			 legend = levels(factor(df7$sampletype[clinical])),
+			 fill = col4,
+			 cex = 1.25
+			 )
 
 ### strip plots
 
@@ -378,3 +491,149 @@ stripPlot(df8c,c("tumour","pb_cd4"))
 stripPlot(df8c,c("til_cd4","pb_cd4"))
 stripPlot(df8c,c("til_cd8","pb_cd8"))
 
+### PCA of populations+patients
+
+dpca1 <- t(dh14[complete.cases(dh14),])
+rowMeans(dpca1)
+s <- svd(dpca1-rowMeans(dpca1))
+
+pc1 <- s$d[1]*s$v[,1]
+pc2 <- s$d[2]*s$v[,2]
+
+dh14name1$samplenumber
+
+group <- factor(dh14name1$population)
+color1 <- brewer.pal(3,"Set1")
+
+png(gen("pca"))
+
+plot(pc1,
+		 pc2,
+		 xlab = "PC1",
+		 ylab = "PC2",
+		 col = c("green","red","blue"),
+		 type = "n"
+		 )
+
+text(pc1,
+		 pc2,
+		 labels = dh14name1$samplenumber,
+	 col = c("green","red","blue"),
+	 )
+
+dev.off()
+
+
+### plots of PCA variable colour
+
+pca_df <- df13
+pca_formula <- samplenumber + population ~ expression
+pca_colour <- "pdl2"
+
+plotPCA(pca_df, pca_formula, pca_colour)
+
+for (pca_colour in levels(pca_df$expression)){
+	plotPCA(pca_df, pca_formula, pca_colour)
+}
+
+### tSNE of populations+patients
+
+#uncomment to run tSNE
+#output <- tsne(t(dpca1), perplexity = 15, max_iter = 3000)
+
+#str(output)
+
+#png(gen("tsne"))
+
+#plot(output[,1],
+#		 output[,2],
+#		 type = "n",
+#		 col = c("green","red","blue"),
+#		 pch = 19
+#		 )
+
+#text(output[,1],
+#		 output[,2],
+#		 labels = dh14name1$samplenumber,
+#		 col = c("green","red","blue"),
+#		 )
+
+#dev.off()
+
+### correlation analysis
+
+
+dc14 <- acast(df13, samplenumber ~ population + expression)
+dc15 <- dc14[complete.cases(dc14),]
+dc16 <- cov(dc15)
+
+max(dc16)
+min(dc16)
+cov_breaks <- c(seq(-0.3,-0.01,length = 100),0,seq(0.01,0.8,length = 100))
+cov_palette <- colorRampPalette(c("#3540FF","black","#D42C2C"))(n = length(cov_breaks)-1)
+
+heatmap.2(dc16,
+					margins = c(10,10),
+					trace = "none",
+					col = cov_palette,
+					breaks = cov_breaks
+					)
+
+#get smaller labels
+df13
+dn14 <- acast(df13,samplenumber ~ expression ~ population)
+dn15 <- dn14[complete.cases(dc14),,]
+dimnames(dn15)[[3]] <- c("cd4","tmr","cd8")
+dn16 <- melt(dn15)
+colnames(dn16) <- c("samplenumber","expression","population","value")
+dn17 <- acast(dn16, samplenumber ~ expression + population)
+dim(dn15)
+
+#define colours and breaks
+net_breaks <- c(seq(-1,-0.01,length=100),0,seq(0.01,1,length = 100)) 
+net_palette <- colorRampPalette(c("red","white","#006104"))(n = length(net_breaks)-1) 
+
+#define threshold for network
+thres_pos <- 0.7
+thres_neg <- -0.2
+
+#get correlation matrix, taken upper triangle and those above threshold
+dn18<- cor(dn17, method="spearman")
+#dn18["pd1_tmr","pdl1_tmr"] <- -0.9 # test correct weights
+dn18[ lower.tri(dn18, diag=TRUE) ] <- 0
+net_deselect <- thres_neg < dn18 & dn18 < thres_pos
+dn18[net_deselect] <- 0
+
+#invert matrix to arrange values in same order as E(graph)
+dn19 <- t(dn18)
+net_weights <- dn19[dn19!=0]
+writeCsv(dn19)
+
+#create graph
+graph <- graph.adjacency(dn18, weighted=TRUE, mode="upper", diag = FALSE)
+
+#assign weights graph
+E(graph)$weight <- net_weights
+E(graph)
+
+#find colours for weights
+colours <- cut(E(graph)$weight, breaks = net_breaks, labels = net_palette)
+colours <- as.character(colours)
+
+#find absolute weights
+E(graph)$weight
+
+#assign colors to graph
+E(graph)$color <- colours
+V(graph)$color <- rep(c("#B0DCFF","#FFB0B1","#D2FFB0"),dim(dn15)[2])
+
+#assign width of lines to graph
+E(graph)$width <- 2
+
+#assign graph layout
+graph$layout <- layout.fruchterman.reingold
+
+#delete vertices which aren't connected
+graph <- delete.vertices(graph,which(degree(graph) < 1))
+
+plot(graph)
