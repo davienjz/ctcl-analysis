@@ -18,6 +18,7 @@ library(corrgram)
 
 ### import functions
 source("functions.R")
+source("diversity.R")
 
 ### import data
 panel1 <- read.csv("data/panel1.csv")
