@@ -3,11 +3,11 @@ library(data.table)
 
 #Set-up
 base_dir = ".."
-lmd_dir_p1 = "panel_1_lmd"
-lmd_dir_p2 = "panel_2_lmd"
-lmd_dir_p3 = "panel_3_lmd"
-lmd_dir_p4 = "panel_4_lmd"
-gates_dir = "gating/gates"
+lmd_dir_p1 = "panel_1_lmd/"
+lmd_dir_p2 = "panel_2_lmd/"
+lmd_dir_p3 = "panel_3_lmd/"
+lmd_dir_p4 = "panel_4_lmd/"
+gates_dir = "gating/gates/"
 
 #1) Name channels
 p1_channel_names <-  c("FL1", "FL2", "dump", "tigit", "pd1", "pdl2", "cd4", "cd3", "pdl1", "cd8")
